@@ -9,13 +9,15 @@ function registerShell() {
 	});
 }
 
-exports.extract = function(filePath, destinationPath, format = "png") {
+exports.extract = function (filePath, destinationPath, format = "png") {
 	const filePaths = filePath => [].concat(filePath),
 		ps = registerShell();
 	ps.addCommand(`Add-Type -AssemblyName System.Drawing`)
 	filePaths(filePath).forEach(element => {
+		ps.addCommand(`$sh = New-Object -ComObject WScript.Shell`);
+		ps.addCommand(`$exeLocation = $sh.CreateShortcut('${element}').TargetPath`);
 		var finalDestinationPath = path.join(destinationPath, `${path.basename(element, path.extname(element))}.${format}`);
-		ps.addCommand(`[System.Drawing.Icon]::ExtractAssociatedIcon('${element}').ToBitmap().Save('${finalDestinationPath}','${format}')`)
+		ps.addCommand(`[System.Drawing.Icon]::ExtractAssociatedIcon($exeLocation).ToBitmap().Save('${finalDestinationPath}','${format}')`)
 	});
 	ps.invoke().then().catch(err => {
 		console.log(err);
